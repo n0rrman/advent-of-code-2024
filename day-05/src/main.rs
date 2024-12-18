@@ -1,41 +1,70 @@
 use std::collections::HashMap;
+use std::fs;
 
-fn read_data() -> (Vec<(str, str)>, Vec<Vec<str>>) {
-    let input_string = String::from_utf8_lossy(include_bytes!("test_data.txt"));
-
-    let split = input_string.split("\n\n");
-
-    let rules = split.clone().collect::<Vec<_>>()[0]
+fn extract_rules(input_string: &str) -> HashMap<String, Vec<String>> {
+    let rule_list = input_string
         .lines()
-        .map(|x| {
-            let rule = x.split("|").collect::<Vec<&str>>();
-            (&rule[0], &rule[1])
-        })
+        .map(|x| x.split("|").map(|y| y.to_string()).collect::<Vec<_>>())
         .collect::<Vec<_>>();
 
-    let vals = &split.collect::<Vec<&str>>()[1]
-        .lines()
-        .map(|x| x.split(",").collect::<Vec<&str>>())
-        .collect::<Vec<Vec<&str>>>();
+    let mut rules: HashMap<String, Vec<String>> = HashMap::new();
 
-    (rules, vals)
-}
+    for rule in rule_list {
+        let key = &rule[0];
+        let value = rule[1].to_string();
 
-fn a(rules: &Vec<(String, String)>, vals: &Vec<Vec<String>>) -> i32 {
-    println!("{:?}", rules);
-    println!("{:?}", vals);
-
-    let _rule_map: HashMap<String, Vec<String>>;
-
-    for val in vals {
-        let max_len = val.len();
-        for i in 0..max_len {
-            print!("{:?} ", val[i]);
+        match rules.get_mut(key) {
+            Some(val) => {
+                val.push(value);
+            }
+            None => {
+                rules.insert(key.to_string(), vec![value]);
+            }
         }
-        println!("middle: {:?}", val[max_len / 2]);
     }
 
-    0
+    rules
+}
+
+fn extract_protocol(input_string: &str) -> Vec<Vec<String>> {
+    input_string
+        .lines()
+        .map(|x| x.split(",").map(|y| y.to_string()).collect::<Vec<_>>())
+        .collect()
+}
+
+fn read_data(file_name: &str) -> (HashMap<String, Vec<String>>, Vec<Vec<String>>) {
+    let input_string = fs::read_to_string(file_name).expect("failed to read input file");
+    let split_string = input_string.split("\n\n").collect::<Vec<&str>>();
+
+    let rules = extract_rules(&split_string[0]);
+    let protocol = extract_protocol(&split_string[1]);
+
+    (rules, protocol)
+}
+
+fn a(rules: &HashMap<String, Vec<String>>, protocol: &Vec<Vec<String>>) -> i32 {
+    let mut score: i32 = 0;
+
+    for line in protocol {
+        let mut valid = true;
+        for index in 0..line.len() {
+            let current_rules = rules.get(&line[index]);
+            if !line[index + 1..line.len()]
+                .iter()
+                .all(|x| current_rules.unwrap_or(&vec![]).contains(x)) 
+            {
+                valid = false;
+                break;
+            }
+        }
+        
+        if valid {
+            score += line[line.len()/2].parse::<i32>().unwrap_or(0);
+        }
+    }
+
+    score
 }
 
 fn b() -> i32 {
@@ -43,6 +72,6 @@ fn b() -> i32 {
 }
 
 fn main() {
-    let (rules, vals) = read_data();
-    print!("Part one: {}\nPart two: {}\n", a(&rules, &vals), b());
+    let (rules, protocol) = read_data("data.txt");
+    print!("Part one: {}\nPart two: {}\n", a(&rules, &protocol), b());
 }
