@@ -50,28 +50,79 @@ fn a(rules: &HashMap<String, Vec<String>>, protocol: &Vec<Vec<String>>) -> i32 {
         let mut valid = true;
         for index in 0..line.len() {
             let current_rules = rules.get(&line[index]);
-            if !line[index + 1..line.len()]
+            if !line[index + 1..]
                 .iter()
-                .all(|x| current_rules.unwrap_or(&vec![]).contains(x)) 
+                .all(|x| current_rules.unwrap_or(&vec![]).contains(x))
             {
                 valid = false;
                 break;
             }
         }
-        
+
         if valid {
-            score += line[line.len()/2].parse::<i32>().unwrap_or(0);
+            score += line[line.len() / 2].parse::<i32>().unwrap_or(0);
         }
     }
 
     score
 }
 
-fn b() -> i32 {
-    0
+fn rearrange_protocol(rules: &HashMap<String, Vec<String>>, line: &Vec<String>) -> Vec<String> {
+    let mut rearranged = line.clone();
+
+    let mut run = true;
+    while run {
+        run = false;
+        let len = rearranged.len() - 1;
+
+        for index in 0..len {
+            let current_rules = rules.get(&rearranged[index]);
+
+            if !rearranged[index + 1..]
+                .iter()
+                .all(|x| current_rules.unwrap_or(&vec![]).contains(x))
+            {
+                let tmp = rearranged.remove(index);
+                rearranged.push(tmp);
+                run = true;
+                break;
+            }
+        }
+    }
+
+    rearranged
+}
+
+fn b(rules: &HashMap<String, Vec<String>>, protocol: &Vec<Vec<String>>) -> i32 {
+    let mut score: i32 = 0;
+
+    for line in protocol {
+        let mut valid = true;
+        for index in 0..line.len() {
+            let current_rules = rules.get(&line[index]);
+            if !line[index + 1..]
+                .iter()
+                .all(|x| current_rules.unwrap_or(&vec![]).contains(x))
+            {
+                valid = false;
+                break;
+            }
+        }
+
+        if !valid {
+            let rearranged_line = rearrange_protocol(&rules, &line);
+            score += rearranged_line[line.len() / 2].parse::<i32>().unwrap_or(0);
+        }
+    }
+
+    score
 }
 
 fn main() {
     let (rules, protocol) = read_data("data.txt");
-    print!("Part one: {}\nPart two: {}\n", a(&rules, &protocol), b());
+    print!(
+        "Part one: {}\nPart two: {}\n",
+        a(&rules, &protocol),
+        b(&rules, &protocol)
+    );
 }
