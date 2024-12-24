@@ -99,18 +99,49 @@ fn traverse_grid(grid: &mut Vec<Vec<char>>) -> Option<&Vec<Vec<char>>> {
     Some(grid)
 }
 
+fn count_inf_loops(grid: &mut Vec<Vec<char>>, visited: &Vec<Vec<char>>) -> i32 {
+    let mut inf_count = 0;
+    let mut y = 0;
+    let mut x;
+    let (start_x, start_y) = find_start(grid);
+
+    for row in visited {
+        x = 0;
+        for val in row {
+            if x == start_x && y == start_y {
+                x += 1;
+                continue;
+            }
+
+            if *val == 'X' {
+                grid[y][x] = '#';
+                if traverse_grid(grid).is_none() {
+                    inf_count += 1;
+                }
+                grid[start_y][start_x] = '^';
+                grid[y][x] = 'X';
+            }
+            x += 1;
+        }
+        y += 1;
+    }
+
+    inf_count
+}
+
 fn a(grid: &mut Vec<Vec<char>>) -> i32 {
     let visited = traverse_grid(grid).unwrap();
     count_visited(visited)
 }
 
 fn b(grid: &mut Vec<Vec<char>>) -> i32 {
-    let _visited = traverse_grid(grid).unwrap();
-    0
+    let mut grid_clone = grid.clone();
+    let visited = traverse_grid(grid).unwrap();
+    count_inf_loops(&mut grid_clone, visited)
 }
 
 fn main() {
-    let grid = build_grid("test_data.txt");
+    let grid = build_grid("data.txt");
     print!(
         "Part one: {}\nPart two: {}\n",
         a(&mut grid.clone()),
