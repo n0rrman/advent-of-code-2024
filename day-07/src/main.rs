@@ -23,6 +23,20 @@ fn check_line(target: &i64, current: &i64, line: &[i64]) -> bool {
         || check_line(target, &(current + line[0]), &line[1..])
 }
 
+fn check_line_concat(target: &i64, current: &i64, line: &[i64]) -> bool {
+    if line.len() == 0 {
+        return target == current;
+    }
+
+    check_line_concat(target, &(current * line[0]), &line[1..])
+        || check_line_concat(target, &(current + line[0]), &line[1..])
+        || check_line_concat(
+            target,
+            &(current * 10_i64.pow(line[0].ilog(10) + 1) + line[0]),
+            &line[1..],
+        )
+}
+
 fn a(data: &Vec<Vec<i64>>) -> i64 {
     let mut calibration_res = 0;
 
@@ -34,11 +48,20 @@ fn a(data: &Vec<Vec<i64>>) -> i64 {
 
     calibration_res
 }
-fn b() -> i64 {
-    0
+
+fn b(data: &Vec<Vec<i64>>) -> i64 {
+    let mut calibration_res = 0;
+
+    for line in data {
+        if check_line_concat(&line[0], &line[1], &line[2..]) {
+            calibration_res += line[0];
+        }
+    }
+
+    calibration_res
 }
 
 fn main() {
     let data = read_data("data.txt");
-    print!("Part one: {}\nPart two: {}\n", a(&data), b(),);
+    print!("Part one: {}\nPart two: {}\n", a(&data), b(&data));
 }
