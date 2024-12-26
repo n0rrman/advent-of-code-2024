@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs;
+use std::usize;
 
 fn read_data(file_name: &str) -> (HashMap<(usize, usize), char>, (isize, isize)) {
     let input_string = fs::read_to_string(file_name).expect("failed to read input file");
@@ -62,11 +63,48 @@ fn a(data: &HashMap<(usize, usize), char>, size: &(isize, isize)) -> i32 {
     antinodes.len() as i32
 }
 
-fn b() -> i32 {
-    1
+fn b(data: &HashMap<(usize, usize), char>, size: &(isize, isize)) -> i32 {
+    let mut antinodes: HashSet<(usize, usize)> = HashSet::new();
+
+    for a in data {
+        for b in data {
+            if a.1 == b.1 {
+                let a_x = a.0 .0 as isize;
+                let a_y = a.0 .1 as isize;
+                let b_x = b.0 .0 as isize;
+                let b_y = b.0 .1 as isize;
+
+                if a_x == b_x || a_y == b_y {
+                    continue;
+                }
+
+                antinodes.insert((a_x as usize, a_y as usize));
+                antinodes.insert((b_x as usize, b_y as usize));
+
+                let mut antinode_x = a_x + (a_x - b_x);
+                let mut antinode_y = a_y + (a_y - b_y);
+
+                while antinode_x >= 0
+                    && antinode_y >= 0
+                    && antinode_x < size.0
+                    && antinode_y < size.1
+                {
+                    antinodes.insert((antinode_x as usize, antinode_y as usize));
+
+                    antinode_x = antinode_x + (a_x - b_x);
+                    antinode_y = antinode_y + (a_y - b_y);
+                }
+            }
+        }
+    }
+    antinodes.len() as i32
 }
 
 fn main() {
     let (data, size) = read_data("data.txt");
-    print!("Part one: {}\nPart two: {}\n", a(&data, &size), b());
+    print!(
+        "Part one: {}\nPart two: {}\n",
+        a(&data, &size),
+        b(&data, &size)
+    );
 }
