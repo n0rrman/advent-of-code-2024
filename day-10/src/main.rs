@@ -11,20 +11,42 @@ fn build_grid(data: &String) -> Vec<Vec<char>> {
         .collect::<Vec<_>>()
 }
 
-fn calc_trails(_idx: usize, grid: &Vec<Vec<char>>) -> i32 {
+fn calc_trails(idx: usize, grid: &Vec<Vec<char>>) -> i32 {
     let width = grid[0].len();
-    rec_calc_trails().len() as i32
+    let x = idx % width;
+    let y = idx / width;
 
+    rec_calc_trails(x, y, 0, &grid).len() as i32
 }
 
-fn rec_calc_trails() -> HashSet<(usize, usize)> {
+fn rec_calc_trails(x: usize, y: usize, val: i32, grid: &Vec<Vec<char>>) -> HashSet<(usize, usize)> {
     let mut set: HashSet<(usize, usize)> = HashSet::new();
-    set.insert((0, 0));
+
+    if val == 9 && grid[y][x] as i32 - 48 == 9 {
+        set.insert((x, y));
+        return set;
+    }
+
+    let new_val = val + 1;
+    if x > 0 && grid[y][x - 1] as i32 - 48 == new_val {
+        set.extend(rec_calc_trails(x - 1, y, new_val, &grid).drain());
+    }
+    if x < grid[0].len() - 1 && grid[y][x + 1] as i32 - 48 == new_val {
+        set.extend(rec_calc_trails(x + 1, y, new_val, &grid).drain());
+    }
+    if y > 0 && grid[y - 1][x] as i32 - 48 == new_val {
+        set.extend(rec_calc_trails(x, y - 1, new_val, &grid).drain());
+    }
+    if y < grid.len() - 1 && grid[y + 1][x] as i32 - 48 == new_val {
+        set.extend(rec_calc_trails(x, y + 1, new_val, &grid).drain());
+    }
+
     return set;
 }
 
 fn a(data: &String, grid: &Vec<Vec<char>>) -> i32 {
-    data.chars()
+    data.replace("\n", "")
+        .chars()
         .enumerate()
         .map(|(i, c)| match c {
             '0' => calc_trails(i, &grid),
@@ -33,13 +55,12 @@ fn a(data: &String, grid: &Vec<Vec<char>>) -> i32 {
         .sum()
 }
 
-fn b(_data: &String, grid: &Vec<Vec<char>>) -> i32 {
-    grid.iter().for_each(|x| println!("{:?}", x));
+fn b(_data: &String, _grid: &Vec<Vec<char>>) -> i32 {
     0
 }
 
 fn main() {
-    let data = read_data("test_data.txt");
+    let data = read_data("data.txt");
     let grid = build_grid(&data);
     print!(
         "Part one: {}\nPart two: {}\n",
